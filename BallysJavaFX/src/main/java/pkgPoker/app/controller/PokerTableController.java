@@ -26,6 +26,7 @@ import pkgPokerEnum.eAction;
 import pkgPokerEnum.eGame;
 import pkgPokerBLL.Action;
 import pkgPokerBLL.GamePlay;
+import pkgPokerBLL.Player;
 import pkgPokerBLL.Table;
 
 public class PokerTableController implements Initializable {
@@ -104,11 +105,35 @@ public class PokerTableController implements Initializable {
 	//TODO: Lab #4 - Complete (fix) setiPlayerPosition
 	public void btnSitLeave_Click(ActionEvent event) {
 
+		Action act;
+		int pos = mainApp.getPlayer().getiPlayerPosition();
+		ToggleButton button = (ToggleButton)event.getSource();
+		
 		// Set the PlayerPosition in the Player
-		mainApp.getPlayer().setiPlayerPosition(1);
-
-		// Build an Action message
-		Action act = new Action(eAction.Sit, mainApp.getPlayer());
+		if (button == btnPos1SitLeave) {
+			switch (pos) {
+			case 1:
+				mainApp.getPlayer().setiPlayerPosition(0);
+				act = new Action(eAction.Leave, mainApp.getPlayer());
+				break;
+			default: 
+				mainApp.getPlayer().setiPlayerPosition(1);
+				act = new Action(eAction.Sit, mainApp.getPlayer());
+				break;
+			}
+		}
+		else {
+			switch (pos) {
+			case 2: 
+				mainApp.getPlayer().setiPlayerPosition(0);
+				act = new Action(eAction.Leave, mainApp.getPlayer());
+				break;
+			default:
+				mainApp.getPlayer().setiPlayerPosition(2);
+				act = new Action(eAction.Sit, mainApp.getPlayer());
+				break;
+			}
+		}
 
 		// Send the Action to the Hub
 		mainApp.messageSend(act);
@@ -158,6 +183,105 @@ public class PokerTableController implements Initializable {
 	//TODO: Lab #4 Complete the implementation
 	public void Handle_TableState(Table HubPokerTable) {
 
+		int numPlayers = 0;
+		String playerName = mainApp.getPlayer().getPlayerName();
+		int pos = mainApp.getPlayer().getiPlayerPosition();
+		for (Player p : HubPokerTable.getTablePlayers().values()) {
+			if (p.getiPlayerPosition() > 0) {
+				numPlayers += 1;
+			}
+		}
+		switch (pos) {
+		case 1: 
+			lblPlayerPos1.setText(playerName);
+			btnPos1SitLeave.setVisible(true);
+			btnPos1SitLeave.setSelected(true);
+			btnPos1SitLeave.setText("Leave");
+			if (numPlayers == 2) {
+				for (Player p : HubPokerTable.getTablePlayers().values()) {
+					if (p.getiPlayerPosition() == 2) {
+						lblPlayerPos2.setText(p.getPlayerName());
+					}
+				}
+				btnPos2SitLeave.setVisible(false);
+				btnPos2SitLeave.setSelected(true);
+				btnPos2SitLeave.setText("Leave");
+				btnStartGame.setVisible(true);
+			}
+			else {
+				lblPlayerPos2.setText("Player 2");
+				btnPos2SitLeave.setVisible(false);
+				btnPos2SitLeave.setSelected(false);
+				btnPos2SitLeave.setText("Sit");
+				btnStartGame.setVisible(false);
+			}
+			break;
+		
+		case 2:
+			lblPlayerPos2.setText(playerName);
+			btnPos2SitLeave.setVisible(true);
+			btnPos2SitLeave.setSelected(true);
+			btnPos2SitLeave.setText("Leave");
+			if (numPlayers == 2) {
+				for (Player p : HubPokerTable.getTablePlayers().values()) {
+					if (p.getiPlayerPosition() == 1) {
+						lblPlayerPos1.setText(p.getPlayerName());
+					}
+				}
+				btnPos1SitLeave.setVisible(false);
+				btnPos1SitLeave.setSelected(true);
+				btnPos1SitLeave.setText("Leave");
+				btnStartGame.setVisible(true);
+			}
+			else {
+				lblPlayerPos1.setText("Player 1");
+				btnPos1SitLeave.setVisible(false);
+				btnPos1SitLeave.setSelected(false);
+				btnPos1SitLeave.setText("Sit");
+				btnStartGame.setVisible(false);
+			}
+			break;
+		
+		default:
+			if (numPlayers == 0) {
+				lblPlayerPos1.setText("Player 1");
+				lblPlayerPos2.setText("Player 2");
+				btnPos1SitLeave.setVisible(true);
+				btnPos2SitLeave.setVisible(true);
+				btnPos1SitLeave.setSelected(false);
+				btnPos2SitLeave.setSelected(false);
+				btnPos1SitLeave.setText("Sit");
+				btnPos2SitLeave.setText("Sit");
+				btnStartGame.setVisible(false);
+			}
+			else {
+				for (Player p : HubPokerTable.getTablePlayers().values()) {
+					if (p.getiPlayerPosition() == 1) {
+						lblPlayerPos1.setText(p.getPlayerName());
+						lblPlayerPos2.setText("Player 2");
+						btnPos1SitLeave.setVisible(false);
+						btnPos2SitLeave.setVisible(true);
+						btnPos1SitLeave.setSelected(true);
+						btnPos2SitLeave.setSelected(false);
+						btnPos1SitLeave.setText("Leave");
+						btnPos2SitLeave.setText("Sit");
+						btnStartGame.setVisible(false);
+					}
+					else if (p.getiPlayerPosition() == 2) {
+						lblPlayerPos1.setText("Player 1");
+						lblPlayerPos2.setText(p.getPlayerName());
+						btnPos1SitLeave.setVisible(true);
+						btnPos2SitLeave.setVisible(false);
+						btnPos1SitLeave.setSelected(false);
+						btnPos2SitLeave.setSelected(true);
+						btnPos1SitLeave.setText("Sit");
+						btnPos2SitLeave.setText("Leave");
+						btnStartGame.setVisible(false);
+					}
+				}
+			}
+			break;
+		}
 	}
 
 	public void Handle_GameState(GamePlay HubPokerGame) {
